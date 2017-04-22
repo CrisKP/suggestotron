@@ -4,7 +4,9 @@ class TopicsController < ApplicationController
   # GET /topics
   # GET /topics.json
   def index
-    @topics = Topic.all
+    @topics = Topic.includes(:votes).sort do |another_topic, one_topic|
+      one_topic.votes.count <=> another_topic.votes.count
+    end
   end
 
   # GET /topics/1
@@ -61,10 +63,22 @@ class TopicsController < ApplicationController
     end
   end
 
+#POST /topics/1/upvote
 def upvote
   @topic = Topic.find(params[:id])
   @topic.votes.create
   redirect_to(topics_path)
+end
+
+#POST /topics/1/downvote
+def downvote
+  @topic = Topic.find(params[:id])
+  if @topic.votes.present?
+  @topic.votes.first.destroy
+    redirect_to(topics_path)
+  else
+    redirect_to :root, notice: "Hey you can't remove no votes"
+  end
 end
 
   private
